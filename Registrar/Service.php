@@ -58,7 +58,7 @@ class Service implements InjectionAwareInterface
             `status` varchar(100) NOT NULL,
             `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (`id`),
-            UNIQUE (`domain_id`),
+            UNIQUE (`domain_id`, `status`),
             FOREIGN KEY (`domain_id`) REFERENCES `service_domain`(`id`) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
@@ -72,7 +72,7 @@ class Service implements InjectionAwareInterface
             `digest` text NOT NULL,
             `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (`id`),
-            UNIQUE (`domain_id`),
+            UNIQUE (`key_tag`),
             FOREIGN KEY (`domain_id`) REFERENCES `service_domain`(`id`) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
         ';
