@@ -1,0 +1,10 @@
+{
+  "id": "registrar",
+  "type": "mod",
+  "name": "ICANN Registrar Accreditation",
+  "description": "Module for Implementing ICANN Accreditation Database Structure",
+  "icon_url": "icon.svg",
+  "version": "1.0.0",
+  "author": "Namingo",
+  "author_url": "https://namingo.org/"
+}
