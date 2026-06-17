@@ -1,4 +1,4 @@
-# ICANN Registrar Accreditation
+# Namingo Registrar for FOSSBilling
 Module for Implementing ICANN Accreditation Database Structure
 
 ## Installation
@@ -9,6 +9,16 @@ mv fossbilling-registrar/Registrar /var/www/modules/
 ```
 
 - Go to Extensions > Overview in the admin panel and activate "ICANN Registrar Accreditation".
+
+## Upgrade
+
+Before upgrading, make a database backup.
+
+To upgrade, replace the existing module files with the latest version and open the FOSSBilling admin panel. The module update routine will ensure that the required database tables exist.
+
+Recent versions add database support for reseller management and better ICANN/NIS2 contact validation.
+
+Existing data is preserved. Uninstalling the module no longer drops database tables.
 
 ## Usage Instructions
 

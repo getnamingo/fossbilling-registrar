@@ -1,11 +1,11 @@
 <?php
 /**
- * Copyright 2022-2023 FOSSBilling
- * Copyright 2011-2021 BoxBilling, Inc.
- * SPDX-License-Identifier: Apache-2.0.
+ * Namingo Registrar for FOSSBilling (https://fossbilling.org/)
  *
- * @copyright FOSSBilling (https://www.fossbilling.org)
- * @license http://www.apache.org/licenses/LICENSE-2.0 Apache-2.0
+ * Module for Implementing ICANN Accreditation Database Structure
+ * Written in 2025-2026 by Taras Kondratyuk (https://namingo.org)
+ *
+ * @license Apache-2.0
  */
 
 namespace Box\Mod\Registrar;
@@ -77,37 +77,101 @@ class Service implements InjectionAwareInterface
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
         ';
         $this->di['db']->exec($sql);
+        $this->installV120Tables();
 
         return true;
     }
 
     /**
-     * Removes the records from the database.
+     * Uninstalls the module.
+     *
+     * Module data is intentionally preserved to avoid accidental loss of
+     * domain, DNSSEC, reseller, and contact validation records.
+     *
+     * @return bool
      */
     public function uninstall(): bool
     {
-        $this->di['db']->exec('DROP TABLE IF EXISTS `domain_meta`');
-        $this->di['db']->exec('DROP TABLE IF EXISTS `domain_status`');
-        $this->di['db']->exec('DROP TABLE IF EXISTS `domain_dnssec`');
-
+        // Preserve all module data on uninstall.
+        // Use a separate manual purge if destructive cleanup is required.
         return true;
     }
 
     /**
-     * Method to update module. When you release new version to
-     * extensions.fossbilling.org then this method will be called
-     * after the new files are placed.
+     * Updates the module after new files are placed.
      *
-     * @param array $manifest - information about the new module version
+     * Ensures that the latest database tables are present. Existing data is
+     * preserved.
      *
      * @return bool
-     *
-     * @throws InformationException
      */
     public function update(array $manifest): bool
     {
-        // throw new InformationException("Throw exception to terminate module update process with a message", array(), 125);
+        $this->installV120Tables();
+
         return true;
+    }
+
+    private function installV120Tables(): void
+    {
+        $sql = '
+        -- Domain Resellers Table
+        CREATE TABLE IF NOT EXISTS `domain_reseller` (
+            `id` bigint(20) NOT NULL AUTO_INCREMENT,
+            `identifier` varchar(100) NOT NULL,
+            `name` varchar(255) NOT NULL,
+            `email` varchar(255) DEFAULT NULL,
+            `url` varchar(255) DEFAULT NULL,
+            `country` char(2) DEFAULT NULL,
+            `status` enum(\'active\',\'suspended\',\'terminated\') NOT NULL DEFAULT \'active\',
+            `notes` text DEFAULT NULL,
+            `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `identifier` (`identifier`),
+            KEY `status` (`status`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+        -- Domain Reseller Mapping Table
+        CREATE TABLE IF NOT EXISTS `domain_reseller_domain` (
+            `id` bigint(20) NOT NULL AUTO_INCREMENT,
+            `reseller_id` bigint(20) NOT NULL,
+            `domain` varchar(255) NOT NULL,
+            `service_domain_id` bigint(20) DEFAULT NULL,
+            `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `domain` (`domain`),
+            KEY `reseller_id` (`reseller_id`),
+            KEY `service_domain_id` (`service_domain_id`),
+            CONSTRAINT `domain_reseller_domain_reseller_fk`
+                FOREIGN KEY (`reseller_id`) REFERENCES `domain_reseller`(`id`)
+                ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+        -- ICANN / NIS2 Contact Validation Table
+        CREATE TABLE IF NOT EXISTS `domain_contact_validation` (
+            `id` bigint(20) NOT NULL AUTO_INCREMENT,
+            `client_id` bigint(20) NOT NULL,
+            `is_validated` tinyint(1) NOT NULL DEFAULT 0,
+            `validation_checked_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            `validation_method` varchar(100) DEFAULT NULL,
+            `validation_token` varchar(255) DEFAULT NULL,
+            `validation_log` text DEFAULT NULL,
+            `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `client_id` (`client_id`),
+            KEY `is_validated` (`is_validated`),
+            KEY `validation_checked_at` (`validation_checked_at`),
+            KEY `validation_token` (`validation_token`),
+            CONSTRAINT `domain_contact_validation_client_fk`
+                FOREIGN KEY (`client_id`) REFERENCES `client`(`id`)
+                ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+        ';
+
+        $this->di['db']->exec($sql);
     }
 
     /**
