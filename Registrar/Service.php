@@ -76,8 +76,10 @@ class Service implements InjectionAwareInterface
             FOREIGN KEY (`domain_id`) REFERENCES `service_domain`(`id`) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
         ';
+
         $this->di['db']->exec($sql);
         $this->installV120Tables();
+        $this->installV123Tables();
 
         return true;
     }
@@ -108,6 +110,7 @@ class Service implements InjectionAwareInterface
     public function update(array $manifest): bool
     {
         $this->installV120Tables();
+        $this->installV123Tables();
 
         return true;
     }
@@ -168,6 +171,32 @@ class Service implements InjectionAwareInterface
             CONSTRAINT `domain_contact_validation_client_fk`
                 FOREIGN KEY (`client_id`) REFERENCES `client`(`id`)
                 ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+        ';
+
+        $this->di['db']->exec($sql);
+    }
+
+    private function installV123Tables(): void
+    {
+        $sql = '
+        -- Registrar Compliance Notifications
+        CREATE TABLE IF NOT EXISTS `domain_registrar_notification` (
+            `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            `domain_id` bigint(20) DEFAULT NULL,
+            `domain` varchar(255) NOT NULL,
+            `type` varchar(32) NOT NULL,
+            `recipient` varchar(255) NOT NULL,
+            `subject` varchar(255) DEFAULT NULL,
+            `body` mediumtext NOT NULL,
+            `metadata` json DEFAULT NULL,
+            `sent_at` datetime NOT NULL,
+            `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`),
+            KEY `domain_id` (`domain_id`),
+            KEY `domain` (`domain`),
+            KEY `type` (`type`),
+            KEY `sent_at` (`sent_at`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
         ';
 
