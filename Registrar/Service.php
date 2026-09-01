@@ -198,6 +198,60 @@ class Service implements InjectionAwareInterface
             KEY `type` (`type`),
             KEY `sent_at` (`sent_at`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+        -- Domain Validation
+        CREATE TABLE IF NOT EXISTS `domain_validation` (
+            `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            `backend` varchar(32) NOT NULL,
+            `domain_id` bigint(20) NOT NULL,
+            `domain_name` varchar(253) NOT NULL,
+            `verification_key` varchar(191) NOT NULL,
+            `contact_data_hash` char(64) NOT NULL,
+            `registrant_data_hash` char(64) NOT NULL,
+            `trigger_type` enum(
+                \'registration\',
+                \'transfer_in\',
+                \'registrant_change\',
+                \'contact_change\',
+                \'bounce\',
+                \'inaccuracy\',
+                \'manual\'
+            ) NOT NULL,
+            `triggered_at` datetime(3) NOT NULL,
+            `deadline_at` datetime(3) NOT NULL,
+            `status` enum(
+                \'pending\',
+                \'verified\',
+                \'suspended\',
+                \'inactive\'
+            ) NOT NULL DEFAULT \'pending\',
+            `token_hash` char(64) DEFAULT NULL,
+            `token_issued_at` datetime(3) DEFAULT NULL,
+            `email_sent_at` datetime(3) DEFAULT NULL,
+            `reminder_sent_at` datetime(3) DEFAULT NULL,
+            `verified_at` datetime(3) DEFAULT NULL,
+            `verification_method` varchar(32) DEFAULT NULL,
+            `verification_note` text DEFAULT NULL,
+            `client_hold_added` tinyint(1) NOT NULL DEFAULT 0,
+            `client_transfer_prohibited_added` tinyint(1) NOT NULL DEFAULT 0,
+            `suspended_at` datetime(3) DEFAULT NULL,
+            `restored_at` datetime(3) DEFAULT NULL,
+            `last_error` text DEFAULT NULL,
+            `is_current` tinyint(1) DEFAULT 1,
+            `ended_at` datetime(3) DEFAULT NULL,
+            `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+            `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+                ON UPDATE CURRENT_TIMESTAMP(3),
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `uq_domain_validation_current`
+                (`backend`, `domain_id`, `is_current`),
+            KEY `ix_domain_validation_deadline`
+                (`status`, `deadline_at`),
+            KEY `ix_domain_validation_hash`
+                (`contact_data_hash`, `status`),
+            KEY `ix_domain_validation_key`
+                (`backend`, `verification_key`, `is_current`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
         ';
 
         $this->di['db']->exec($sql);
