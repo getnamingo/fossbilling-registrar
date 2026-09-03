@@ -4,7 +4,7 @@
   "name": "ICANN Registrar Accreditation",
   "description": "Module for Implementing ICANN Accreditation Database Structure",
   "icon_url": "icon.svg",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "author": "Namingo",
   "author_url": "https://namingo.org/"
 }
