@@ -1,4 +1,8 @@
 # Namingo Registrar for FOSSBilling
+
+> [!WARNING]
+> **Deprecated:** This module is no longer maintained separately. Please migrate to [Namingo Registrar for FOSSBilling](https://github.com/getnamingo/fossbilling-namingo-registrar) for future updates.
+
 Module for Implementing ICANN Accreditation Database Structure
 
 ## Installation
